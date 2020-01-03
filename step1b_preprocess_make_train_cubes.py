@@ -88,10 +88,12 @@ def make_annotation_images_lidc():
     for patient_index, csv_file in enumerate(glob.glob(src_dir + "*_annos_pos_lidc.csv")):
         patient_id = ntpath.basename(csv_file).replace("_annos_pos_lidc.csv", "")
         df_annos = pandas.read_csv(csv_file)
-        if len(df_annos) == 0:
+#        if len(df_annos) == 0:
+#            continue
+        try:
+            images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
+        except:
             continue
-        images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
-
         for index, row in df_annos.iterrows():
             coord_x = int(row["coord_x"] * images.shape[2])
             coord_y = int(row["coord_y"] * images.shape[1])
@@ -135,11 +137,13 @@ def make_pos_annotation_images_manual():
         # if not "172845185165807139298420209778" in patient_id:
         #     continue
         df_annos = pandas.read_csv(csv_file)
-        if len(df_annos) == 0:
-            continue
+#        if len(df_annos) == 0:
+#            continue
         
-        images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
-
+        try:
+            images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
+        except:
+            continue
         for index, row in df_annos.iterrows():
             coord_x = int(row["x"] * images.shape[2])
             coord_y = int(row["y"] * images.shape[1])
@@ -188,15 +192,17 @@ def make_candidate_auto_images(candidate_types=[]):
             # if not "148229375703208214308676934766" in patient_id:
             #     continue
             df_annos = pandas.read_csv(csv_file)
-            if len(df_annos) == 0:
-                continue
+#            if len(df_annos) == 0:
+#                continue
             print('Patient Id is {}'.format(patient_id))
+#            try:
+#                id_lists.index(patient_id)
+#            except:
+#                continue
             try:
-                id_lists.index(patient_id)
+                images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png", exclude_wildcards=[])
             except:
                 continue
-            images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png", exclude_wildcards=[])
-
             row_no = 0
             for index, row in df_annos.iterrows():
                 coord_x = int(row["coord_x"] * images.shape[2])
@@ -240,10 +246,12 @@ def make_pos_annotation_images_manual_ndsb3():
 
         cancer_label = train_label_df.loc[patient_id]["cancer"]
         df_annos = pandas.read_csv(csv_file)
-        if len(df_annos) == 0:
+#        if len(df_annos) == 0:
+#            continue
+        try:
+            images = helpers.load_patient_images(patient_id, settings.NDSB3_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
+        except:
             continue
-        images = helpers.load_patient_images(patient_id, settings.NDSB3_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
-
         anno_index = 0
         for index, row in df_annos.iterrows():
             pos_neg = "pos" if row["id"] == 0 else "neg"
