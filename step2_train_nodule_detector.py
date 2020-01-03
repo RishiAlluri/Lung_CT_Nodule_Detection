@@ -32,7 +32,7 @@ set_session(tf.Session(config=config))
 # 3 pools istead of 4 gives (bigger end layer) gives much worse validation accuray + logloss .. strange ?
 # 32 x 32 x 32 lijkt het beter te doen dan 48 x 48 x 48..
 
-K.set_image_dim_ordering("tf")
+K.set_image_data_format("channels_last")
 CUBE_SIZE = 32
 MEAN_PIXEL_VALUE = settings.MEAN_PIXEL_VALUE_NODULE
 POS_WEIGHT = 2
@@ -71,8 +71,8 @@ def get_train_holdout_files(fold_count, train_percentage=80, logreg=True, ndsb3_
             pos_samples_holdout = []
 
 
-    ndsb3_list = glob.glob(settings.BASE_DIR_SSD + "generated_traindata/ndsb3_train_cubes_manual/*.png")
-    print("Ndsb3 samples: ", len(ndsb3_list))
+    #ndsb3_list = glob.glob(settings.BASE_DIR_SSD + "generated_traindata/ndsb3_train_cubes_manual/*.png")
+    #print("Ndsb3 samples: ", len(ndsb3_list))
 
     pos_samples_ndsb3_fold = []
     pos_samples_ndsb3_holdout = []
@@ -80,45 +80,45 @@ def get_train_holdout_files(fold_count, train_percentage=80, logreg=True, ndsb3_
     ndsb3_neg = 0
     ndsb3_pos_holdout = 0
     ndsb3_neg_holdout = 0
-    if manual_labels:
-        for file_path in ndsb3_list:
-            file_name = ntpath.basename(file_path)
+    #if manual_labels:
+    #    for file_path in ndsb3_list:
+    #        file_name = ntpath.basename(file_path)
 
-            parts = file_name.split("_")
-            if int(parts[4]) == 0 and parts[3] != "neg":  # skip positive non-cancer-cases
-                continue
+    #        parts = file_name.split("_")
+    #        if int(parts[4]) == 0 and parts[3] != "neg":  # skip positive non-cancer-cases
+    #            continue
 
-            if fold_count == 3:
-                if parts[3] == "neg":  # skip negative cases
-                    continue
-
-
-            patient_id = parts[1]
-            patient_fold = helpers.get_patient_fold(patient_id) % fold_count
-            if patient_fold == ndsb3_holdout:
-                pos_samples_ndsb3_holdout.append(file_path)
-                if parts[3] == "neg":
-                    ndsb3_neg_holdout += 1
-                else:
-                    ndsb3_pos_holdout += 1
-            else:
-                pos_samples_ndsb3_fold.append(file_path)
-                print("In fold: ", patient_id)
-                if parts[3] == "neg":
-                    ndsb3_neg += 1
-                else:
-                    ndsb3_pos += 1
-
-    print(ndsb3_pos, " ndsb3 pos labels train")
-    print(ndsb3_neg, " ndsb3 neg labels train")
-    print(ndsb3_pos_holdout, " ndsb3 pos labels holdout")
-    print(ndsb3_neg_holdout, " ndsb3 neg labels holdout")
+    #        if fold_count == 3:
+    #            if parts[3] == "neg":  # skip negative cases
+    #                continue
 
 
-    if manual_labels:
-        for times_ndsb3 in range(4):  # make ndsb labels count 4 times just like in LIDC when 4 doctors annotated a nodule
-            pos_samples_train += pos_samples_ndsb3_fold
-            pos_samples_holdout += pos_samples_ndsb3_holdout
+    #        patient_id = parts[1]
+    #        patient_fold = helpers.get_patient_fold(patient_id) % fold_count
+    #        if patient_fold == ndsb3_holdout:
+    #            pos_samples_ndsb3_holdout.append(file_path)
+    #            if parts[3] == "neg":
+    #                ndsb3_neg_holdout += 1
+    #            else:
+    #                ndsb3_pos_holdout += 1
+    #        else:
+    #            pos_samples_ndsb3_fold.append(file_path)
+    #            print("In fold: ", patient_id)
+    #            if parts[3] == "neg":
+    #                ndsb3_neg += 1
+    #            else:
+    #                ndsb3_pos += 1
+
+    #print(ndsb3_pos, " ndsb3 pos labels train")
+    #print(ndsb3_neg, " ndsb3 neg labels train")
+    #print(ndsb3_pos_holdout, " ndsb3 pos labels holdout")
+    #print(ndsb3_neg_holdout, " ndsb3 neg labels holdout")
+
+
+    #if manual_labels:
+    #    for times_ndsb3 in range(4):  # make ndsb labels count 4 times just like in LIDC when 4 doctors annotated a nodule
+    #        pos_samples_train += pos_samples_ndsb3_fold
+    #        pos_samples_holdout += pos_samples_ndsb3_holdout
 
     neg_samples_edge = glob.glob(settings.BASE_DIR_SSD + "generated_traindata/luna16_train_cubes_auto/*_edge.png")
     print("Edge samples: ", len(neg_samples_edge))
@@ -163,35 +163,18 @@ def get_train_holdout_files(fold_count, train_percentage=80, logreg=True, ndsb3_
                 pos_sample_path = pos_samples[pos_idx]
                 file_name = ntpath.basename(pos_sample_path)
                 parts = file_name.split("_")
-                if parts[0].startswith("ndsb3manual"):
-                    if parts[3] == "pos":
-                        class_label = 1  # only take positive examples where we know there was a cancer..
-                        cancer_label = int(parts[4])
-                        assert cancer_label == 1
-                        size_label = int(parts[5])
-                        # print(parts[1], size_label)
-                        assert class_label == 1
-                        if size_label < 1:
-                            print("huh ?")
-                        assert size_label >= 1
-                        ndsb3_pos += 1
-                    else:
-                        class_label = 0
-                        size_label = 0
-                        ndsb3_neg += 1
-                else:
-                    class_label = int(parts[-2])
-                    size_label = int(parts[-3])
-                    assert class_label == 1
-                    assert parts[-1] == "pos.png"
-                    assert size_label >= 1
+                class_label = int(parts[-2])
+                size_label = int(parts[-3])
+                assert class_label == 1
+                assert parts[-1] == "pos.png"
+                assert size_label >= 1
 
                 res.append((pos_sample_path, class_label, size_label))
                 pos_idx += 1
                 pos_idx %= len(pos_samples)
 
-        print("ndsb2 pos: ", ndsb3_pos)
-        print("ndsb2 neg: ", ndsb3_neg)
+        #print("ndsb2 pos: ", ndsb3_pos)
+        #print("ndsb2 neg: ", ndsb3_neg)
 
     print("Train count: ", len(train_res), ", holdout count: ", len(holdout_res))
     return train_res, holdout_res
@@ -382,8 +365,8 @@ def train(model_name, fold_count, train_full_set=False, load_weights_path=None, 
     holdout_txt = "_h" + str(ndsb3_holdout) if manual_labels else ""
     if train_full_set:
         holdout_txt = "_fs" + holdout_txt
-    checkpoint = ModelCheckpoint("workdir/model_" + model_name + "_" + holdout_txt + "_e" + "{epoch:02d}-{val_loss:.4f}.hd5", monitor='val_loss', verbose=1, save_best_only=not train_full_set, save_weights_only=False, mode='auto', period=1)
-    checkpoint_fixed_name = ModelCheckpoint("workdir/model_" + model_name + "_" + holdout_txt + "_best.hd5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    checkpoint = ModelCheckpoint("/content/drive/My Drive/All" + model_name + "_" + holdout_txt + "_e" + "{epoch:02d}-{val_loss:.4f}.hd5", monitor='val_loss', verbose=1, save_best_only=not train_full_set, save_weights_only=False, mode='auto', period=0.1)
+    checkpoint_fixed_name = ModelCheckpoint("/content/drive/My Drive/Best" + model_name + "_" + holdout_txt + "_best.hd5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=0.1)
     model.fit_generator(train_gen, len(train_files) / 1, 12, validation_data=holdout_gen, nb_val_samples=len(holdout_files) / 1, callbacks=[checkpoint, checkpoint_fixed_name, learnrate_scheduler])
     model.save("workdir/model_" + model_name + "_" + holdout_txt + "_end.hd5")
 

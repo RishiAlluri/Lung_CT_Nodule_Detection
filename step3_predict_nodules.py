@@ -32,7 +32,7 @@ set_session(tf.Session(config=config))
 # 3 pools istead of 4 gives (bigger end layer) gives much worse validation accuray + logloss .. strange ?
 # 32 x 32 x 32 lijkt het beter te doen dan 48 x 48 x 48..
 
-K.set_image_dim_ordering("tf")
+K.set_image_data_format("channels_last")
 CUBE_SIZE = step2_train_nodule_detector.CUBE_SIZE
 MEAN_PIXEL_VALUE = settings.MEAN_PIXEL_VALUE_NODULE
 NEGS_PER_POS = 20
@@ -50,8 +50,9 @@ def prepare_image_for_net3D(img):
     return img
 
 
-def filter_patient_nodules_predictions(df_nodule_predictions: pandas.DataFrame, patient_id, view_size, luna16=False):
-    src_dir = settings.LUNA_16_TRAIN_DIR2D2 if luna16 else settings.NDSB3_EXTRACTED_IMAGE_DIR
+
+def filter_patient_nodules_predictions(df_nodule_predictions: pandas.DataFrame, patient_id, view_size, luna16=True):
+    src_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR if luna16 else settings.NDSB3_EXTRACTED_IMAGE_DIR
     patient_mask = helpers.load_patient_images(patient_id, src_dir, "*_m.png")
     delete_indices = []
     for index, row in df_nodule_predictions.iterrows():
@@ -129,7 +130,7 @@ def make_negative_train_data_based_on_predicted_luna_nodules():
         filter_patient_nodules_predictions(df_nodule_predictions, patient_id, CUBE_SIZE, luna16=True)
         pos_labels = pandas.read_csv(pos_labels_dir + patient_id + "_annos_pos_lidc.csv")
         print(csv_index, ": ", patient_id, ", pos", len(pos_labels))
-        patient_imgs = helpers.load_patient_images(patient_id, settings.LUNA_16_TRAIN_DIR2D2, "*_m.png")
+        patient_imgs = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*_m.png")
         for nod_pred_index, nod_pred_row in df_nodule_predictions.iterrows():
             if nod_pred_row["diameter_mm"] < 0:
                 continue
@@ -165,7 +166,7 @@ def make_negative_train_data_based_on_predicted_luna_nodules():
     print("Total false pos:", total_false_pos)
 
 
-def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=False, magnification=1, flip=False, train_data=True, holdout_no=-1, ext_name="", fold_count=2):
+def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=True, magnification=1, flip=False, train_data=True, holdout_no=-1, ext_name="", fold_count=2):
     if luna16:
         dst_dir = settings.LUNA_NODULE_DETECTION_DIR
     else:
@@ -195,10 +196,13 @@ def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=False, 
             labels_df.set_index(["id"], inplace=True)
 
     patient_ids = []
-    for file_name in os.listdir(settings.NDSB3_EXTRACTED_IMAGE_DIR):
-        if not os.path.isdir(settings.NDSB3_EXTRACTED_IMAGE_DIR + file_name):
+    for file_name in os.listdir(settings.LUNA16_EXTRACTED_IMAGE_DIR):
+        if not os.path.isdir(settings.LUNA16_EXTRACTED_IMAGE_DIR + file_name):
+            continue
+        if len(os.listdir(settings.LUNA16_EXTRACTED_IMAGE_DIR + file_name)) == 0:
             continue
         patient_ids.append(file_name)
+
 
     all_predictions_csv = []
     for patient_index, patient_id in enumerate(reversed(patient_ids)):
@@ -222,11 +226,14 @@ def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=False, 
             if os.path.exists(csv_target_path):
                 continue
 
-        patient_img = helpers.load_patient_images(patient_id, settings.NDSB3_EXTRACTED_IMAGE_DIR, "*_i.png", [])
+        try:
+            patient_img = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*_i.png", [])
+        except:
+            continue
         if magnification != 1:
             patient_img = helpers.rescale_patient_images(patient_img, (1, 1, 1), magnification)
 
-        patient_mask = helpers.load_patient_images(patient_id, settings.NDSB3_EXTRACTED_IMAGE_DIR, "*_m.png", [])
+        patient_mask = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*_m.png", [])
         if magnification != 1:
             patient_mask = helpers.rescale_patient_images(patient_mask, (1, 1, 1), magnification, is_mask_image=True)
 

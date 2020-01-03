@@ -116,6 +116,7 @@ def make_annotation_images_lidc():
 
 
 def make_pos_annotation_images_manual():
+    
     src_dir = "resources/luna16_manual_labels/"
 
     dst_dir = settings.BASE_DIR_SSD + "generated_traindata/luna16_train_cubes_manual/"
@@ -136,6 +137,7 @@ def make_pos_annotation_images_manual():
         df_annos = pandas.read_csv(csv_file)
         if len(df_annos) == 0:
             continue
+        
         images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png")
 
         for index, row in df_annos.iterrows():
@@ -166,6 +168,7 @@ def make_pos_annotation_images_manual():
 
 def make_candidate_auto_images(candidate_types=[]):
     dst_dir = settings.BASE_DIR_SSD + "generated_traindata/luna16_train_cubes_auto/"
+    id_lists = os.listdir(settings.LUNA16_EXTRACTED_IMAGE_DIR)
     if not os.path.exists(dst_dir):
         os.mkdir(dst_dir)
 
@@ -178,7 +181,7 @@ def make_candidate_auto_images(candidate_types=[]):
             src_dir = "resources/luna16_falsepos_labels/"
         else:
             src_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/"
-
+        
         for index, csv_file in enumerate(glob.glob(src_dir + "*_candidates_" + candidate_type + ".csv")):
             patient_id = ntpath.basename(csv_file).replace("_candidates_" + candidate_type + ".csv", "")
             print(index, ",patient: ", patient_id, " type:", candidate_type)
@@ -186,6 +189,11 @@ def make_candidate_auto_images(candidate_types=[]):
             #     continue
             df_annos = pandas.read_csv(csv_file)
             if len(df_annos) == 0:
+                continue
+            print('Patient Id is {}'.format(patient_id))
+            try:
+                id_lists.index(patient_id)
+            except:
                 continue
             images = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*" + CUBE_IMGTYPE_SRC + ".png", exclude_wildcards=[])
 
@@ -273,8 +281,8 @@ if __name__ == "__main__":
     #     make_pos_annotation_images()  # not used anymore
     if True:
         make_candidate_auto_images(["falsepos", "luna", "edge"])
-    if True:
-        make_pos_annotation_images_manual_ndsb3()  # for second model
+    #if True:
+    #    make_pos_annotation_images_manual_ndsb3()  # for second model
 
 
 
