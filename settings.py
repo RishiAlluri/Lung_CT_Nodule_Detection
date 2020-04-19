@@ -10,7 +10,7 @@ BASE_DIR_SSD = ""
 BASE_DIR = ""
 EXTRA_DATA_DIR = "resources/"
 NDSB3_RAW_SRC_DIR = BASE_DIR + "ndsb_raw/stage12/"
-LUNA16_RAW_SRC_DIR = 'input_data/'
+LUNA16_RAW_SRC_DIR = ''
 
 NDSB3_EXTRACTED_IMAGE_DIR = BASE_DIR_SSD + "ndsb3_extracted_images/"
 LUNA16_EXTRACTED_IMAGE_DIR = "Luna/luna16_extracted_images/"

@@ -99,7 +99,7 @@ def filter_patient_nodules_predictions(df_nodule_predictions: pandas.DataFrame, 
 
 
 def filter_nodule_predictions(only_patient_id=None):
-    src_dir = settings.NDSB3_NODULE_DETECTION_DIR
+    src_dir = settings.LUNA_NODULE_DETECTION_DIR
     for csv_index, csv_path in enumerate(glob.glob(src_dir + "*.csv")):
         file_name = ntpath.basename(csv_path)
         patient_id = file_name.replace(".csv", "")
@@ -167,6 +167,7 @@ def make_negative_train_data_based_on_predicted_luna_nodules():
 
 
 def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=True, magnification=1, flip=False, train_data=True, holdout_no=-1, ext_name="", fold_count=2):
+    print(magnification)
     if luna16:
         dst_dir = settings.LUNA_NODULE_DETECTION_DIR
     else:
@@ -338,6 +339,10 @@ def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=True, m
         print("Done in : ", sw.get_elapsed_seconds(), " seconds")
 
 
+
+
+
+
 if __name__ == "__main__":
 
     CONTINUE_JOB = True
@@ -357,14 +362,14 @@ if __name__ == "__main__":
 
     if True:
         for magnification in [1, 1.5, 2]:  #
-            predict_cubes("models/model_luna16_full__fs_best.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=True, holdout_no=None, ext_name="luna16_fs")
+            #predict_cubes("models/model_luna16_full__fs_best.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=True, holdout_no=None, ext_name="luna16_fs")
             predict_cubes("models/model_luna16_full__fs_best.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=False, holdout_no=None, ext_name="luna16_fs")
 
     if True:
         for version in [2, 1]:
             for holdout in [0, 1]:
                 for magnification in [1, 1.5, 2]:  #
-                    predict_cubes("models/model_luna_posnegndsb_v" + str(version) + "__fs_h" + str(holdout) + "_end.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=True, holdout_no=holdout, ext_name="luna_posnegndsb_v" + str(version), fold_count=2)
-                    if holdout == 0:
-                        predict_cubes("models/model_luna_posnegndsb_v" + str(version) + "__fs_h" + str(holdout) + "_end.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=False, holdout_no=holdout, ext_name="luna_posnegndsb_v" + str(version), fold_count=2)
+#                    predict_cubes("models/model_luna_posnegndsb_v" + str(version) + "__fs_h" + str(holdout) + "_end.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=True, holdout_no=holdout, ext_name="luna_posnegndsb_v" + str(version), fold_count=2)
+#                    if holdout == 0:
+                    predict_cubes("models/model_luna_posnegndsb_v" + str(version) + "__fs_h" + str(holdout) + "_end.hd5", CONTINUE_JOB, only_patient_id=only_patient_id, magnification=magnification, flip=False, train_data=False, holdout_no=holdout, ext_name="luna_posnegndsb_v" + str(version), fold_count=2)
 

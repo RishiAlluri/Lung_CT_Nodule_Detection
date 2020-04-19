@@ -12,7 +12,7 @@ import multiprocessing
 from bs4 import BeautifulSoup #  conda install beautifulsoup4, coda install lxml
 import os
 import glob
-
+import shutil 
 random.seed(1321)
 numpy.random.seed(1321)
 
@@ -184,7 +184,7 @@ def process_image(src_path):
     patient_id = ntpath.basename(src_path).replace(".mhd", "")
     print("Patient: ", patient_id)
 
-    dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + patient_id + "/"
+    dst_dir = 'Luna/luna16_extracted_images/' + patient_id + "/"
     if not os.path.exists(dst_dir):
         os.mkdir(dst_dir)
 
@@ -603,14 +603,8 @@ def process_auto_candidates_patient(src_path, patient_id, sample_count=1000, can
 
 
 def process_images(path):
-    
-    src_path = path
-    if only_process_patient is None and True:
-        pool = multiprocessing.Pool(settings.WORKER_POOL_SIZE)
-        pool.map(process_image, src_paths)
-    else:
-        print(src_path)
-        process_image(src_path)
+    print(path)
+    process_image(path)
 
 
 def process_pos_annotations_patient2():
@@ -689,21 +683,7 @@ def process_lidc_annotations(only_patient=None, agreement_threshold=0):
             # extended_line = [nodule_id, x_center_perc, y_center_perc, z_center_perc, diameter_perc, malignacy, sphericiy, margin, spiculation, texture, calcification, internal_structure, lobulation, subtlety ]
     df_annos = pandas.DataFrame(all_lines, columns=["patient_id", "anno_index", "coord_x", "coord_y", "coord_z", "diameter", "malscore", "sphericiy", "margin", "spiculation", "texture", "calcification", "internal_structure", "lobulation", "subtlety"])
     df_annos.to_csv(settings.BASE_DIR + "lidc_annotations.csv", index=False)
+    os.copy()
 
 
-if __name__ == "__main__":
-    if True:
-        only_process_patient = None
-        process_images(delete_existing=False, only_process_patient=only_process_patient)
-
-    if True:
-        process_lidc_annotations(only_patient=None, agreement_threshold=0)
-
-    if True:
-        process_pos_annotations_patient2()
-        process_excluded_annotations_patients(only_patient=None)
-
-    if True:
-        process_luna_candidates_patients(only_patient_id=None)
-    if True:
-        process_auto_candidates_patients()
+process_images('1.3.6.1.4.1.14519.5.2.1.6279.6001.105756658031515062000744821260.mhd')
