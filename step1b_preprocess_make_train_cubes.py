@@ -9,7 +9,7 @@ import os
 
 CUBE_IMGTYPE_SRC = "_i"
 
-
+#a function to Save the training cube as an image
 def save_cube_img(target_path, cube_img, rows, cols):
     assert rows * cols == cube_img.shape[0]
     img_height = cube_img.shape[1]
@@ -24,7 +24,7 @@ def save_cube_img(target_path, cube_img, rows, cols):
 
     cv2.imwrite(target_path, res_img)
 
-
+#Get a cube from a certain image given coordinates and size
 def get_cube_from_img(img3d, center_x, center_y, center_z, block_size):
     start_x = max(center_x - block_size / 2, 0)
     if start_x + block_size > img3d.shape[2]:
@@ -40,7 +40,7 @@ def get_cube_from_img(img3d, center_x, center_y, center_z, block_size):
     res = img3d[start_z:start_z + block_size, start_y:start_y + block_size, start_x:start_x + block_size]
     return res
 
-
+#Make a false positive annotations images to enhance the senstivity of model
 def make_pos_annotation_images():
     src_dir = settings.LUNA_16_TRAIN_DIR2D2 + "metadata/"
     dst_dir = settings.BASE_DIR_SSD + "luna16_train_cubes_pos/"
@@ -56,7 +56,7 @@ def make_pos_annotation_images():
         if len(df_annos) == 0:
             continue
         images = helpers.load_patient_images(patient_id, settings.LUNA_16_TRAIN_DIR2D2, "*" + CUBE_IMGTYPE_SRC + ".png")
-
+        #Extracting the data needed to the training, to bind it to the training cubes.
         for index, row in df_annos.iterrows():
             coord_x = int(row["coord_x"] * images.shape[2])
             coord_y = int(row["coord_y"] * images.shape[1])
@@ -74,7 +74,7 @@ def make_pos_annotation_images():
             save_cube_img(dst_dir + patient_id + "_" + str(anno_index) + "_" + str(diam_mm) + "_1_" + "pos.png", cube_img, 8, 8)
         helpers.print_tabbed([patient_index, patient_id, len(df_annos)], [5, 64, 8])
 
-
+#Get the lidc annotations for the same images, which have the 10 chars.
 def make_annotation_images_lidc():
     src_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/"
 
@@ -116,7 +116,7 @@ def make_annotation_images_lidc():
             save_cube_img(dst_dir + patient_id + "_" + str(anno_index) + "_" + str(malscore * malscore) + "_1_pos.png", cube_img, 8, 8)
         helpers.print_tabbed([patient_index, patient_id, len(df_annos)], [5, 64, 8])
 
-
+#Extracting some manualy labeled annotations by some developers to enhance the model performance
 def make_pos_annotation_images_manual():
     
     src_dir = "resources/luna16_manual_labels/"
@@ -169,7 +169,7 @@ def make_pos_annotation_images_manual():
             save_cube_img(dst_dir + patient_id + "_" + str(anno_index) + "_" + str(malscore) + "_1_" + ("pos" if node_type == 0 else "neg") + ".png", cube_img, 8, 8)
         helpers.print_tabbed([patient_index, patient_id, len(df_annos)], [5, 64, 8])
 
-
+#Not used
 def make_candidate_auto_images(candidate_types=[]):
     dst_dir = settings.BASE_DIR_SSD + "generated_traindata/luna16_train_cubes_auto/"
     id_lists = os.listdir(settings.LUNA16_EXTRACTED_IMAGE_DIR)
