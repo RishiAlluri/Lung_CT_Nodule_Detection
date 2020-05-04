@@ -42,7 +42,7 @@ P_TH = 0.6
 LEARN_RATE = 0.001
 
 USE_DROPOUT = False
-
+#This function is the preparing function that takes an image, get it ready to be trained on, using resizing to the input of the NN
 def prepare_image_for_net3D(img):
     img = img.astype(numpy.float32)
     img -= MEAN_PIXEL_VALUE
@@ -50,7 +50,7 @@ def prepare_image_for_net3D(img):
     img = img.reshape(1, img.shape[0], img.shape[1], img.shape[2], 1)
     return img
 
-
+#This is to get the train-test files from the bindings we created in the last scripts
 def get_train_holdout_files(fold_count, train_percentage=80, logreg=True, ndsb3_holdout=0, manual_labels=True, full_luna_set=False):
     print("Get train/holdout files.")
     # pos_samples = glob.glob(settings.BASE_DIR_SSD + "luna16_train_cubes_pos/*.png")
@@ -80,46 +80,8 @@ def get_train_holdout_files(fold_count, train_percentage=80, logreg=True, ndsb3_
     ndsb3_neg = 0
     ndsb3_pos_holdout = 0
     ndsb3_neg_holdout = 0
-    #if manual_labels:
-    #    for file_path in ndsb3_list:
-    #        file_name = ntpath.basename(file_path)
-
-    #        parts = file_name.split("_")
-    #        if int(parts[4]) == 0 and parts[3] != "neg":  # skip positive non-cancer-cases
-    #            continue
-
-    #        if fold_count == 3:
-    #            if parts[3] == "neg":  # skip negative cases
-    #                continue
-
-
-    #        patient_id = parts[1]
-    #        patient_fold = helpers.get_patient_fold(patient_id) % fold_count
-    #        if patient_fold == ndsb3_holdout:
-    #            pos_samples_ndsb3_holdout.append(file_path)
-    #            if parts[3] == "neg":
-    #                ndsb3_neg_holdout += 1
-    #            else:
-    #                ndsb3_pos_holdout += 1
-    #        else:
-    #            pos_samples_ndsb3_fold.append(file_path)
-    #            print("In fold: ", patient_id)
-    #            if parts[3] == "neg":
-    #                ndsb3_neg += 1
-    #            else:
-    #                ndsb3_pos += 1
-
-    #print(ndsb3_pos, " ndsb3 pos labels train")
-    #print(ndsb3_neg, " ndsb3 neg labels train")
-    #print(ndsb3_pos_holdout, " ndsb3 pos labels holdout")
-    #print(ndsb3_neg_holdout, " ndsb3 neg labels holdout")
-
-
-    #if manual_labels:
-    #    for times_ndsb3 in range(4):  # make ndsb labels count 4 times just like in LIDC when 4 doctors annotated a nodule
-    #        pos_samples_train += pos_samples_ndsb3_fold
-    #        pos_samples_holdout += pos_samples_ndsb3_holdout
-
+    
+    
     neg_samples_edge = glob.glob(settings.BASE_DIR_SSD + "generated_traindata/luna16_train_cubes_auto/*_edge.png")
     print("Edge samples: ", len(neg_samples_edge))
 
@@ -179,7 +141,7 @@ def get_train_holdout_files(fold_count, train_percentage=80, logreg=True, ndsb3_
     print("Train count: ", len(train_res), ", holdout count: ", len(holdout_res))
     return train_res, holdout_res
 
-
+#this is the data generator that gives us an iterable with certain batch size, to feed it into the neural network
 def data_generator(batch_size, record_list, train_set):
     batch_idx = 0
     means = []
@@ -198,14 +160,7 @@ def data_generator(batch_size, record_list, train_set):
             size_label = record_item[2]
             if class_label == 0:
                 cube_image = helpers.load_cube_img(record_item[0], 6, 8, 48)
-                # if train_set:
-                #     # helpers.save_cube_img("c:/tmp/pre.png", cube_image, 8, 8)
-                #     cube_image = random_rotate_cube_img(cube_image, 0.99, -180, 180)
-                #
-                # if train_set:
-                #     if random.randint(0, 100) > 0.1:
-                #         # cube_image = numpy.flipud(cube_image)
-                #         cube_image = elastic_transform48(cube_image, 64, 8, random_state)
+                
                 wiggle = 48 - CROP_SIZE - 1
                 indent_x = 0
                 indent_y = 0
@@ -288,7 +243,7 @@ def data_generator(batch_size, record_list, train_set):
                 size_list = []
                 batch_idx = 0
 
-
+#this is where we build the network, define the compiling information, inputs and outputs.
 def get_net(input_shape=(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 1), load_weight_path=None, features=False, mal=False) -> Model:
     inputs = Input(shape=input_shape, name="input_1")
     x = inputs
@@ -334,7 +289,7 @@ def get_net(input_shape=(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 1), load_weight_path=N
 
     return model
 
-
+#This is the scheduler of the learning rate, to decrease it as we go deep in training.
 def step_decay(epoch):
     res = 0.001
     if epoch > 5:
@@ -342,7 +297,7 @@ def step_decay(epoch):
     print("learnrate: ", res, " epoch: ", epoch)
     return res
 
-
+#This is the train logic that generates batches, feed it into network, and keep feeding it till every epoch is finished.
 def train(model_name, fold_count, train_full_set=False, load_weights_path=None, ndsb3_holdout=0, manual_labels=True):
     batch_size = 16
     train_files, holdout_files = get_train_holdout_files(train_percentage=80, ndsb3_holdout=ndsb3_holdout, manual_labels=manual_labels, full_luna_set=train_full_set, fold_count=fold_count)
