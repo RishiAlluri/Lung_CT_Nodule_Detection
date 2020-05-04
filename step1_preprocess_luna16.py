@@ -16,7 +16,7 @@ import glob
 random.seed(1321)
 numpy.random.seed(1321)
 
-
+#This function is used to get the scan of a certain patient id from the project's directory
 def find_mhd_file(patient_id):
     for subject_no in range(settings.LUNA_SUBSET_START_INDEX, 10):
         src_dir = settings.LUNA16_RAW_SRC_DIR + "subset" + str(subject_no) + "/"
@@ -25,7 +25,7 @@ def find_mhd_file(patient_id):
                 return src_path
     return None
 
-
+#This function loads the lidc annotations xml files in the resources folder, extract the annotations, characterstics.
 def load_lidc_xml(xml_path, agreement_threshold=0, only_patient=None, save_nodules=False):
     pos_lines = []
     neg_lines = []
@@ -51,12 +51,13 @@ def load_lidc_xml(xml_path, agreement_threshold=0, only_patient=None, save_nodul
     num_z, height, width = img_array.shape        #heightXwidth constitute the transverse plane
     origin = numpy.array(itk_img.GetOrigin())      # x,y,z  Origin in world coordinates (mm)
     spacing = numpy.array(itk_img.GetSpacing())    # spacing of voxels in world coor. (mm)
-    rescale = spacing / settings.TARGET_VOXEL_MM
+    rescale = spacing / settings.TARGET_VOXEL_MM   #The rescaling factor needed the setup our scan on the same scale as others
 
     reading_sessions = xml.LidcReadMessage.find_all("readingSession")
     for reading_session in reading_sessions:
         # print("Sesion")
         nodules = reading_session.find_all("unblindedReadNodule")
+        #Extracting the coordinates of nodule for each nodule
         for nodule in nodules:
             nodule_id = nodule.noduleID.text
             # print("  ", nodule.noduleID)
@@ -104,7 +105,7 @@ def load_lidc_xml(xml_path, agreement_threshold=0, only_patient=None, save_nodul
             if nodule.characteristics.malignancy is None:
                 print("!!!!Nodule:", nodule_id, " has no malignacy")
                 continue
-
+            #Extracting the chars
             malignacy = nodule.characteristics.malignancy.text
             sphericiy = nodule.characteristics.sphericity.text
             margin = nodule.characteristics.margin.text
@@ -121,6 +122,7 @@ def load_lidc_xml(xml_path, agreement_threshold=0, only_patient=None, save_nodul
             extended_lines.append(extended_line)
 
         nonNodules = reading_session.find_all("nonNodule")
+        #Extract the coordinates and chars for the non nodule masses in the data
         for nonNodule in nonNodules:
             z_center = float(nonNodule.imageZposition.text)
             z_center -= origin[2]
@@ -161,7 +163,7 @@ def load_lidc_xml(xml_path, agreement_threshold=0, only_patient=None, save_nodul
             # else:
             #     print("Too few overlaps")
         pos_lines = filtered_lines
-
+    #Saving everything
     df_annos = pandas.DataFrame(pos_lines, columns=["anno_index", "coord_x", "coord_y", "coord_z", "diameter", "malscore"])
     df_annos.to_csv(settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/" + patient_id + "_annos_pos_lidc.csv", index=False)
     df_neg_annos = pandas.DataFrame(neg_lines, columns=["anno_index", "coord_x", "coord_y", "coord_z", "diameter", "malscore"])
@@ -170,7 +172,7 @@ def load_lidc_xml(xml_path, agreement_threshold=0, only_patient=None, save_nodul
     # return [patient_id, spacing[0], spacing[1], spacing[2]]
     return pos_lines, neg_lines, extended_lines
 
-
+#A function to normalize an image using Min Max method
 def normalize(image):
     MIN_BOUND = -1000.0
     MAX_BOUND = 400.0
@@ -179,7 +181,7 @@ def normalize(image):
     image[image < 0] = 0.
     return image
 
-
+#The logic of image processing performed
 def process_image(src_path):
     patient_id = ntpath.basename(src_path).replace(".mhd", "")
     print("Patient: ", patient_id)
@@ -203,19 +205,21 @@ def process_image(src_path):
     print("Spacing (x,y,z): ", spacing)
     rescale = spacing / settings.TARGET_VOXEL_MM
     print("Rescale: ", rescale)
-
+    #Rescale our scan
     img_array = helpers.rescale_patient_images(img_array, spacing, settings.TARGET_VOXEL_MM)
 
     img_list = []
+    #Iterate on each frame
     for i in range(img_array.shape[0]):
         img = img_array[i]
+        #Get the segmented lungs, so we know the regions of interest, using Segmentation
         seg_img, mask = helpers.get_segmented_lungs(img.copy())
         img_list.append(seg_img)
         img = normalize(img)
         cv2.imwrite(dst_dir + "img_" + str(i).rjust(4, '0') + "_i.png", img * 255)
         cv2.imwrite(dst_dir + "img_" + str(i).rjust(4, '0') + "_m.png", mask * 255)
 
-
+#Not used
 def process_pos_annotations_patient(src_path, patient_id):
     df_node = pandas.read_csv("resources/luna16_annotations/annotations.csv")
     dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/"
@@ -290,7 +294,7 @@ def process_pos_annotations_patient(src_path, patient_id):
     df_annos.to_csv(settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/" + patient_id + "_annos_pos.csv", index=False)
     return [patient_id, spacing[0], spacing[1], spacing[2]]
 
-
+#Not used
 def process_excluded_annotations_patient(src_path, patient_id):
     df_node = pandas.read_csv("resources/luna16_annotations/annotations_excluded.csv")
     dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/"
@@ -400,7 +404,7 @@ def process_excluded_annotations_patient(src_path, patient_id):
     df_annos.to_csv(settings.LUNA16_EXTRACTED_IMAGE_DIR + "_labels/" + patient_id + "_annos_excluded.csv", index=False)
     return [patient_id, spacing[0], spacing[1], spacing[2]]
 
-
+#Not used
 def process_luna_candidates_patient(src_path, patient_id):
     dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "/_labels/"
     img_dir = dst_dir + patient_id + "/"
@@ -507,7 +511,7 @@ def process_luna_candidates_patient(src_path, patient_id):
     df_candidates = pandas.DataFrame(candidate_list, columns=["anno_index", "coord_x", "coord_y", "coord_z", "diameter", "malscore"])
     df_candidates.to_csv(dst_dir + patient_id + "_candidates_luna.csv", index=False)
 
-
+#Not used
 def process_auto_candidates_patient(src_path, patient_id, sample_count=1000, candidate_type="white"):
     dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "/_labels/"
     img_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + patient_id + "/"
@@ -601,7 +605,7 @@ def process_auto_candidates_patient(src_path, patient_id, sample_count=1000, can
     df_candidates = pandas.DataFrame(candidate_list, columns=["anno_index", "coord_x", "coord_y", "coord_z", "diameter", "malscore"])
     df_candidates.to_csv(dst_dir + patient_id + "_candidates_" + candidate_type + ".csv", index=False)
 
-
+#a way to use multiprocessing to process many images at the same time.
 def process_images(path):
     
     src_path = path
@@ -612,7 +616,7 @@ def process_images(path):
         print(src_path)
         process_image(src_path)
 
-
+#not used.
 def process_pos_annotations_patient2():
     candidate_index = 0
     only_patient = "197063290812663596858124411210"
@@ -627,7 +631,7 @@ def process_pos_annotations_patient2():
             process_pos_annotations_patient(src_path, patient_id)
             candidate_index += 1
 
-
+#not used
 def process_excluded_annotations_patients(only_patient=None):
     candidate_index = 0
     for subject_no in range(settings.LUNA_SUBSET_START_INDEX, 10):
