@@ -50,7 +50,7 @@ def prepare_image_for_net3D(img):
     return img
 
 
-
+#Filtering the predictions based on the lung segmentation made in step1
 def filter_patient_nodules_predictions(df_nodule_predictions: pandas.DataFrame, patient_id, view_size, luna16=True):
     src_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR if luna16 else settings.NDSB3_EXTRACTED_IMAGE_DIR
     patient_mask = helpers.load_patient_images(patient_id, src_dir, "*_m.png")
@@ -97,7 +97,7 @@ def filter_patient_nodules_predictions(df_nodule_predictions: pandas.DataFrame, 
     df_nodule_predictions.drop(df_nodule_predictions.index[delete_indices], inplace=True)
     return df_nodule_predictions
 
-
+#The logic to iterate on all predictions to filter them using the previous functio
 def filter_nodule_predictions(only_patient_id=None):
     src_dir = settings.LUNA_NODULE_DETECTION_DIR
     for csv_index, csv_path in enumerate(glob.glob(src_dir + "*.csv")):
@@ -110,7 +110,7 @@ def filter_nodule_predictions(only_patient_id=None):
         filter_patient_nodules_predictions(df_nodule_predictions, patient_id, CUBE_SIZE)
         df_nodule_predictions.to_csv(csv_path, index=False)
 
-
+#Not used
 def make_negative_train_data_based_on_predicted_luna_nodules():
     src_dir = settings.LUNA_NODULE_DETECTION_DIR
     pos_labels_dir = settings.LUNA_NODULE_LABELS_DIR
@@ -165,7 +165,7 @@ def make_negative_train_data_based_on_predicted_luna_nodules():
         total_false_pos += len(df_nodule_predictions)
     print("Total false pos:", total_false_pos)
 
-
+#The prediction logic, takes image, get it ready, load the network, pass it to the network, and get the results then filter them.
 def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=True, magnification=1, flip=False, train_data=True, holdout_no=-1, ext_name="", fold_count=2):
     print(magnification)
     if luna16:
@@ -321,19 +321,6 @@ def predict_cubes(model_path, continue_job, only_patient_id=None, luna16=True, m
         df = pandas.DataFrame(patient_predictions_csv, columns=["anno_index", "coord_x", "coord_y", "coord_z", "diameter", "nodule_chance", "diameter_mm"])
         filter_patient_nodules_predictions(df, patient_id, CROP_SIZE * magnification)
         df.to_csv(csv_target_path, index=False)
-
-        # cols = ["anno_index", "nodule_chance", "diamete_mm"] + ["f" + str(i) for i in range(64)]
-        # df_features = pandas.DataFrame(patient_features_csv, columns=cols)
-        # for index, row in df.iterrows():
-        #     if row["diameter_mm"] < 0:
-        #         print("Dropping")
-        #         anno_index = row["anno_index"]
-        #         df_features.drop(df_features[df_features["anno_index"] == anno_index].index, inplace=True)
-        #
-        # df_features.to_csv(csv_target_path_features, index=False)
-
-        # df = pandas.DataFrame(all_predictions_csv, columns=["patient_id", "anno_index", "coord_x", "coord_y", "coord_z", "diameter", "nodule_chance", "diameter_mm"])
-        # df.to_csv("c:/tmp/tmp2.csv", index=False)
 
         print(predict_volume.mean())
         print("Done in : ", sw.get_elapsed_seconds(), " seconds")
