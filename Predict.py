@@ -54,7 +54,7 @@ def prepare_image_for_net3D(img):
 
 def filter_patient_nodules_predictions(df_nodule_predictions: pandas.DataFrame, patient_id, view_size):
     src_dir = ''
-    patient_mask = helpers.load_patient_images(patient_id + '_Preprocessed', src_dir, "*_m.png")
+    patient_mask = helpers.load_patient_images('Luna/luna16_extracted_images/' + patient_id + '/', src_dir, "*_m.png")
     delete_indices = []
     for index, row in df_nodule_predictions.iterrows():
         z_perc = row["coord_z"]
@@ -194,17 +194,19 @@ def predict_cubes(path,model_path, magnification=1, holdout_no=-1, ext_name="", 
 
     print( ": ", patient_id)
     csv_target_path = dst_dir + patient_id + ".csv"
+    print("csv: " + csv_target_path)
+    
     print(patient_id)
     
     try:
-        patient_img = helpers.load_patient_images(patient_id + '_Preprocessed', '', "*_i.png", [])
+        patient_img = helpers.load_patient_images('Luna/luna16_extracted_images/' + patient_id + '/', '', "*_i.png", [])
     except:
         print('Please Re-Process the dicom file again')
     
     if magnification != 1:
         patient_img = helpers.rescale_patient_images(patient_img, (1, 1, 1), magnification)
-
-    patient_mask = helpers.load_patient_images(patient_id + '_Preprocessed','', "*_m.png", [])
+    print (patient_id + '_Preprocessed','', "*_m.png")
+    patient_mask = helpers.load_patient_images('Luna/luna16_extracted_images/' + patient_id + '/','', "*_m.png", [])
     if magnification != 1:
         patient_mask = helpers.rescale_patient_images(patient_mask, (1, 1, 1), magnification, is_mask_image=True)
 
@@ -291,6 +293,7 @@ def predict_cubes(path,model_path, magnification=1, holdout_no=-1, ext_name="", 
     print(all_predictions_csv)
     #print(batch_data)
     filter_patient_nodules_predictions(df, patient_id, CROP_SIZE * magnification)
+    
     df.to_csv(csv_target_path, index=False)
 
     # cols = ["anno_index", "nodule_chance", "diamete_mm"] + ["f" + str(i) for i in range(64)]
@@ -310,8 +313,12 @@ def predict_cubes(path,model_path, magnification=1, holdout_no=-1, ext_name="", 
     print("Done in : ", sw.get_elapsed_seconds(), " seconds")
 
 
-for img_ in os.listdir('somedirectory'):
-    for magnification in [1, 1.5, 2]:  #
-        file_ = img_
-        process_images(file_)
-        predict_cubes(file_[:-4],"models/model_luna16_full__fs_best.hd5", magnification=magnification, holdout_no=None, ext_name="luna16_fs")
+#for img_ in os.listdir('somedirectory'):
+    #for magnification in [1, 1.5, 2]:  #
+        #file_ = img_
+file_ = '1.3.6.1.4.1.14519.5.2.1.6279.6001.277445975068759205899107114231.mhd'
+process_images(file_)
+for magnification in [1, 1.5, 2]:
+
+
+    predict_cubes(file_[:-4],"models/model_luna16_full__fs_best.hd5", magnification=magnification, holdout_no=None, ext_name="luna16_fs")
