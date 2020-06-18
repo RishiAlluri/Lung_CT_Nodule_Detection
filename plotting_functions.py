@@ -27,6 +27,7 @@ def plot(radii,centroids,img_array,path_,chances = None,real = False):
     z_unique = sorted(df_cent['Z'].unique())
     paths = []
     sub_dfs = []
+    print("len: " + str(len(z_unique)))
     for i in range(len(z_unique)):
         if real:
             if not os.path.exists('Real\\{}\\{}'.format(path_,i+1)):
@@ -129,7 +130,7 @@ def get_nodules(img_path):
     #origin = np.array(itk_img.GetOrigin())      # x,y,z  Origin in world coordinates (mm)
     #spacing = np.array(itk_img.GetSpacing())    # spacing of voxels in world coor. (mm)
 
-    df_node = pd.read_csv('C:\\Users\\Ahmed\\Desktop\\CT_Gui\\luna16_nodule_predictions\\predictions10_luna_posnegndsb_v2\\' + img_path.split('/')[-1][:-4] + '.csv')
+    df_node = pd.read_csv('C:/Users/VR Robot/LungCancer Spyder/luna16_nodule_predictions/predictions10_luna_posnegndsb_v2\\' + img_path.split('/')[-1][:-4] + '.csv')
 
     m_factor = np.array([img_array.shape[1],img_array.shape[2],img_array.shape[0]])
 
