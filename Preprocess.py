@@ -686,4 +686,4 @@ def process_lidc_annotations(only_patient=None, agreement_threshold=0):
     os.copy()
 
 
-process_images('1.3.6.1.4.1.14519.5.2.1.6279.6001.105756658031515062000744821260.mhd')
+#process_images('1.3.6.1.4.1.14519.5.2.1.6279.6001.105756658031515062000744821260.mhd')
