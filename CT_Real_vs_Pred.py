@@ -44,13 +44,14 @@ import shutil
 import SimpleITK  # conda install -c https://conda.anaconda.org/simpleitk SimpleITK
 #from bs4 import BeautifulSoup #  conda install beautifulsoup4, coda install lxml
 from plotting_functions import *
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 random.seed(1321)
 numpy.random.seed(1321)
 
 
 
 config = tf.ConfigProto()
+
 config.gpu_options.per_process_gpu_memory_fraction = 0.5
 set_session(tf.Session(config=config))
 
@@ -149,7 +150,7 @@ class Ui_MainWindow(object):
         
     def browse_data1(self):
         
-        data_path , _=QtWidgets.QFileDialog.getOpenFileName(None,'Open File',r"C:\Users\Ahmed\Desktop\CT_Gui")
+        data_path , _=QtWidgets.QFileDialog.getOpenFileName(None,'Open File',r"C:\Users\VR Robot\Documents\LungCancer Detection")
         self.data_path = data_path
         if not os.path.exists('Predicted/{}'.format(self.data_path.split('/')[-1][:-4])):
             os.mkdir('Predicted/{}'.format(self.data_path.split('/')[-1][:-4]))
@@ -179,6 +180,7 @@ class Ui_MainWindow(object):
             
             #self.predict_cubes(self.data_path[:-4],"models/model_luna16_full__fs_best.hd5", magnification=magnification, holdout_no=None, ext_name="luna16_fs")
             radii , centroids,chances,image_array = get_nodules(self.data_path.split('/')[-1])
+            print('here: ' + self.data_path.split('/')[-1][:-4])
             paths, self.sub_dfs = plot(radii,centroids,image_array,self.data_path.split('/')[-1][:-4],chances = chances)
             #print("Done")
             self.sub_dfs_gen_pred = (df_ for df_ in self.sub_dfs)
