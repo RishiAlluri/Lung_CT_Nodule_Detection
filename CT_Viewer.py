@@ -14,7 +14,6 @@ import pylidc as pl
 from matplotlib.patches import Circle
 from PIL import Image
 import glob
-
 import settings
 import helpers
 import sys
@@ -59,7 +58,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1681, 1056)
-        MainWindow.setStyleSheet("background-color: rgb(100, 100,100)")
+        MainWindow.setStyleSheet("background-color: rgb(135,206,250)")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(self.centralwidget)
@@ -128,9 +127,9 @@ class Ui_MainWindow(object):
         self.label_4.setPalette(palette)
         self.label_4.setFont(QtGui.QFont("Arial", 10))
         self.pushButton_4.setText(_translate("MainWindow", "Next Nodule"))
-        self.pushButton_4.setStyleSheet('QPushButton {color: white;}')
+        self.pushButton_4.setStyleSheet('QPushButton {color: black;}')
         self.pushButton.setText(_translate("MainWindow", "Browse/Process CT"))
-        self.pushButton.setStyleSheet('QPushButton {color: white;}')
+        self.pushButton.setStyleSheet('QPushButton {color: black;}')
     def browse_data1(self):
         
         data_path , _=QtWidgets.QFileDialog.getOpenFileName(None,'Open File',r"C:\Users\Ahmed\Desktop\CT_Gui")
